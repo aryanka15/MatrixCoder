@@ -11,12 +11,14 @@ import java.util.Scanner;
 // A program to encode and decode alphabetical messages using any size matrix 
 public class Main {
 
+    public static final String sep = File.separator;
     public static final String[] VALUE_TABLE = new String[] { " ", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J",
             "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" };
-    public static final String MATRIX_FILE = System.getProperty("user.dir").replace("\\", "\\\\") + "\\\\database\\\\Matrix.dat";
-    public static final String VALUES_FILE = System.getProperty("user.dir").replace("\\", "\\\\") + "\\\\database\\\\Values.dat";
+    public static final String MATRIX_FILE = System.getProperty("user.dir") + sep + "database" + sep + "Matrix.dat";
+    public static final String VALUES_FILE = System.getProperty("user.dir") + sep + "database" + sep + "Values.dat";
 
     public static void main(String[] args) throws ClassNotFoundException, IOException {
+        System.out.println(MATRIX_FILE);
         Scanner scan = new Scanner(System.in);
         while (true) { // menu to encode, decode, or quit program
             int decision = 0;
