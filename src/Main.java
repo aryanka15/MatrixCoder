@@ -13,8 +13,8 @@ public class Main {
 
     public static final String[] VALUE_TABLE = new String[] { " ", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J",
             "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" };
-    public static final String MATRIX_FILE = "D:\\Documents\\Other GitHub Repos\\MatrixCoder\\database\\Matrix.dat";
-    public static final String VALUES_FILE = "D:\\Documents\\Other GitHub Repos\\MatrixCoder\\database\\Values.dat";
+    public static final String MATRIX_FILE = System.getProperty("user.dir").replace("\\", "\\\\") + "\\\\database\\\\Matrix.dat";
+    public static final String VALUES_FILE = System.getProperty("user.dir").replace("\\", "\\\\") + "\\\\database\\\\Values.dat";
 
     public static void main(String[] args) throws ClassNotFoundException, IOException {
         Scanner scan = new Scanner(System.in);
@@ -159,6 +159,10 @@ public class Main {
             }
         }
         Matrix keyMatrix = new Matrix(height, width, values);
+        if (keyMatrix.calculateDeterminant() == 0) {
+            System.out.println("This matrix is not invertible and is invalid.");
+            return;
+        } 
         System.out.println("The encoding matrix: " + keyMatrix);
         ArrayList<Matrix> messageMatrices = new ArrayList<>();
         convertTextToInt(message, messageMatrices, height);
