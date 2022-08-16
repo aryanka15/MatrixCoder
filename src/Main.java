@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.Scanner;
 
 // A program to encode and decode alphabetical messages using any size matrix 
@@ -18,7 +19,6 @@ public class Main {
     public static final String VALUES_FILE = System.getProperty("user.dir") + SEP + "database" + SEP + "Values.dat";
 
     public static void main(String[] args) throws ClassNotFoundException, IOException {
-        System.out.println(MATRIX_FILE);
         Scanner scan = new Scanner(System.in);
         while (true) { // menu to encode, decode, or quit program
             int decision = 0;
@@ -41,6 +41,25 @@ public class Main {
         }
     }
 
+    public static Object getFromFile(File file) throws ClassNotFoundException {
+        if (file.exists()) {
+            try {
+                FileInputStream fis = new FileInputStream(file);
+                ObjectInputStream in = new ObjectInputStream(fis);
+
+                Object object = in.readObject();
+
+                in.close();
+                fis.close();
+
+                return object;
+            } catch (Exception ex) {
+                System.out.println("File invalid");
+            }
+        }
+        return null;
+    }
+
     public static void decode(Scanner scan) throws IOException, ClassNotFoundException { // Decoding a message with
                                                                                          // matrix
         scan.nextLine();
@@ -49,19 +68,7 @@ public class Main {
         String values = scan.nextLine();
         if (values.equalsIgnoreCase("L")) {
             File file = new File(VALUES_FILE);
-            if (file.exists()) {
-                try {
-                    FileInputStream fis = new FileInputStream(VALUES_FILE);
-                    ObjectInputStream in = new ObjectInputStream(fis);
-
-                    encodedValues = (ArrayList<Double>) in.readObject();
-
-                    in.close();
-                    fis.close();
-                } catch (IOException ex) {
-                    System.out.println("File invalid");
-                }
-            }
+            encodedValues = (ArrayList<Double>) getFromFile(file);
         } else {
             Scanner valueScan = new Scanner(values); // go through the space-separated values in order to put them in
                                                      // the encoded values array
@@ -78,20 +85,9 @@ public class Main {
         int width = 0;
         if (next.equalsIgnoreCase("l")) {
             File file = new File(MATRIX_FILE);
-            if (file.exists()) {
-                try {
-                    FileInputStream fis = new FileInputStream(file);
-                    ObjectInputStream in = new ObjectInputStream(fis);
-
-                    keyMatrix = (Matrix) in.readObject();
-                    height = keyMatrix.getHeight();
-                    width = keyMatrix.getWidth();
-                    in.close();
-                    fis.close();
-                } catch (IOException ex) {
-                    System.out.println("File invalid");
-                }
-            }
+            keyMatrix = (Matrix) getFromFile(file);
+            height = keyMatrix.getHeight();
+            width = height;
         } else {
             height = Integer.parseInt(next);
             width = height;
@@ -153,13 +149,18 @@ public class Main {
         String message = scan.nextLine();
         message = message.toUpperCase();
         System.out.println("Your message to encode: " + message);
+        System.out.print("Do you want a randomized matrix? (y/n): ");
+        String randomized = scan.next();
         ArrayList<Double> values = new ArrayList<>();
-        for (int i = 1; i <= height; i++) {
-            for (int j = 1; j <= width; j++) {
-                System.out.print("Enter value at position " + i + j + " on the key matrix: ");
-                values.add(scan.nextDouble());
-            }
+        switch(randomized) {
+            case "y":
+                getRandomizedMatrix(values, height, width);
+                break;
+            case "n":
+                getMatrixFromUser(values, scan, height, width);
+                break;
         }
+        
         Matrix keyMatrix = new Matrix(height, width, values);
         if (keyMatrix.calculateDeterminant() == 0) {
             System.out.println("This matrix is not invertible and is invalid.");
@@ -183,35 +184,26 @@ public class Main {
         File file = new File(VALUES_FILE);
         File matrixFile = new File(MATRIX_FILE);
         System.out.println();
+        writeToFile(matrixFile, keyMatrix);
+        writeToFile(file, encodedDoubles);
+        System.out.println();
+    }
+
+    public static void writeToFile(File file, Object objectToWrite) {
         try {
-            if (matrixFile.createNewFile()) {
+            if (file.createNewFile()) {
                 System.out.println("New matrix file instantiated");
             }
-            FileOutputStream fos = new FileOutputStream(matrixFile);
+            FileOutputStream fos = new FileOutputStream(file);
             ObjectOutputStream oos = new ObjectOutputStream(fos);
 
-            oos.writeObject(keyMatrix);
+            oos.writeObject(objectToWrite);
 
             oos.close();
             fos.close();
         } catch (IOException e) {
             System.out.println("Could not save file");
         }
-        try {
-            if (file.createNewFile()) {
-                System.out.println("New file instantiated");
-            }
-            FileOutputStream fos = new FileOutputStream(file);
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-
-            oos.writeObject(encodedDoubles);
-
-            oos.close();
-            fos.close();
-        } catch (IOException ex) {
-            System.out.println("File saving failed");
-        }
-        System.out.println();
     }
 
     public static String convertIntToText(ArrayList<Double> values) {
@@ -220,6 +212,27 @@ public class Main {
             message += VALUE_TABLE[(int) Math.round(value)];
         }
         return message;
+    }
+    
+    public static void getRandomizedMatrix(ArrayList<Double> values, int height, int width) {
+        Random gen = new Random();
+        do {
+            values.clear();
+            for (int i = 0; i < height*width; i++) {
+                double temp = Math.round(gen.nextDouble()*100)/100.0;
+                values.add(temp);
+            }
+        }
+        while (new Matrix(height, width, values).calculateDeterminant() == 0);
+    }
+
+    public static void getMatrixFromUser(ArrayList<Double> values, Scanner scan, int height, int width) {
+        for (int i = 1; i <= height; i++) {
+            for (int j = 1; j <= width; j++) {
+                System.out.print("Enter value at position " + i + j + " on the key matrix: ");
+                values.add(scan.nextDouble());
+            }
+        }
     }
 
     public static void convertTextToInt(String message, ArrayList<Matrix> matrices, int keyMatrixSize) {
